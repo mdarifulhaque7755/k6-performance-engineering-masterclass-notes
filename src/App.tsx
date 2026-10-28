@@ -608,8 +608,32 @@ export default function App() {
   const totalRequests = iterationsPerVu * calcVus;
   const estimatedRps = (calcVus / iterationDurationSec).toFixed(1);
 
+  const safeCopyText = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {}
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch {
+      return false;
+    }
+  };
+
   const handleCopy = (code: string, key: string) => {
-    navigator.clipboard.writeText(code);
+    safeCopyText(code);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
   };
@@ -700,7 +724,7 @@ export default function App() {
   };
 
   const copyMarkdownForNotion = () => {
-    navigator.clipboard.writeText(EMBEDDED_MARKDOWN);
+    safeCopyText(EMBEDDED_MARKDOWN);
     setCopiedNotion(true);
     setTimeout(() => setCopiedNotion(false), 2500);
   };
